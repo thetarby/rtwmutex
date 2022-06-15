@@ -10,7 +10,7 @@ import (
 )
 
 func new() IRTWMutex{
-	return NewRWMutex()
+	return NewRWMutex2()
 }
 
 func parallelReader(m IRTWMutex, clocked, cunlock, cdone chan bool) {

@@ -1,7 +1,6 @@
 package lala
 
 import (
-	"fmt"
 	"sync"
 	"sync/atomic"
 )
@@ -40,12 +39,9 @@ func (rw *RTWMutex) Upgrade() {
 	// Wait for active readers, however if there is already a pending writer
 	// readerWait is already set no need to change it.
 	if pw {
-		if rw.readerWait == 1 {
-			// if this is the only reader
-			return
+		if readerWait := atomic.AddInt32(&rw.readerWait, 0); readerWait != 1{
+			rw.upgradeCond.Acquire(1)
 		}
-
-		rw.upgradeCond.Acquire(1)
 	} else {
 		readers := r + 2*rwmutexMaxReaders
 		if readerWait := atomic.AddInt32(&rw.readerWait, readers); readerWait != 1{
@@ -55,11 +51,6 @@ func (rw *RTWMutex) Upgrade() {
 }
 
 func (rw *RTWMutex) RTWUpgradeUnlock() {
-	readerWait := atomic.AddInt32(&rw.readerWait, -1)
-	if readerWait != 0 {
-		panic(fmt.Sprintf("reader wait counter is wrong %v", readerWait))
-	}
-
 	r := atomic.AddInt32(&rw.readerCount, (2*rwmutexMaxReaders)-1)
 	if r >= rwmutexMaxReaders {
 		panic("sync: Unlock of unlocked RWMutex")
@@ -70,6 +61,8 @@ func (rw *RTWMutex) RTWUpgradeUnlock() {
 		panic("invalid state")
 	}
 
+	atomic.AddInt32(&rw.readerWait, -1)
+	
 	if pw {
 		rw.writerCond.Release(1)
 	} else {
@@ -92,10 +85,10 @@ func (rw *RTWMutex) RUnlock() {
 	if r := atomic.AddInt32(&rw.readerCount, -1); r < 0 {
 		pw, pu := rw.pendingState(r)
 		readerWait := atomic.AddInt32(&rw.readerWait, -1)
-		if readerWait == 0 && pw {
-			rw.writerCond.Release(1)
-		} else if readerWait == 1 && pu {
+		if readerWait == 1 && pu {
 			rw.upgradeCond.Release(1)
+		} else if readerWait == 0 && pw {
+			rw.writerCond.Release(1)
 		}
 	}
 }
