@@ -1,4 +1,4 @@
-package lala
+package rtwmutex
 
 import (
 	"sync"

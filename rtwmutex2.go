@@ -1,4 +1,4 @@
-package lala
+package rtwmutex
 
 import (
 	"sync"
@@ -12,7 +12,7 @@ const (
 	Entered
 )
 
-type RWMutex2 struct {
+type RTWMutex2 struct {
 	rtw            sync.Mutex
 	w              sync.Mutex
 	l              sync.Mutex
@@ -25,17 +25,17 @@ type RWMutex2 struct {
 	readerCond     semaphore
 }
 
-func (rw *RWMutex2) RTWLock() {
+func (rw *RTWMutex2) RTWLock() {
 	rw.rtw.Lock()
 	rw.RLock()
 }
 
-func (rw *RWMutex2) RTWUnlock() {
+func (rw *RTWMutex2) RTWUnlock() {
 	rw.RUnlock()
 	rw.rtw.Unlock()
 }
 
-func (rw *RWMutex2) Upgrade() {
+func (rw *RTWMutex2) Upgrade() {
 	rw.l.Lock()
 	if rw.readers == 1 {
 		rw.upgrade = Entered
@@ -50,7 +50,7 @@ func (rw *RWMutex2) Upgrade() {
 	rw.upgradingCond.Acquire(1)
 }
 
-func (rw *RWMutex2) RTWUpgradeUnlock() {
+func (rw *RTWMutex2) RTWUpgradeUnlock() {
 	rw.l.Lock()
 	rw.readers--
 	rw.upgrade = Empty
@@ -67,7 +67,7 @@ func (rw *RWMutex2) RTWUpgradeUnlock() {
 	rw.l.Unlock()
 }
 
-func (rw *RWMutex2) RLock() {
+func (rw *RTWMutex2) RLock() {
 	wait := false
 	rw.l.Lock()
 	if rw.writer == Pending || rw.upgrade == Pending || rw.writer == Entered || rw.upgrade == Entered {
@@ -82,7 +82,7 @@ func (rw *RWMutex2) RLock() {
 	}
 }
 
-func (rw *RWMutex2) RUnlock() {
+func (rw *RTWMutex2) RUnlock() {
 	rw.l.Lock()
 	rw.readers--
 	if rw.readers == 0 && rw.writer == Pending {
@@ -97,7 +97,7 @@ func (rw *RWMutex2) RUnlock() {
 	rw.l.Unlock()
 }
 
-func (rw *RWMutex2) Unlock() {
+func (rw *RTWMutex2) Unlock() {
 	rw.l.Lock()
 	p := rw.readersPending
 	rw.readers = p
@@ -109,7 +109,7 @@ func (rw *RWMutex2) Unlock() {
 	rw.readerCond.Release(int(p))
 }
 
-func (rw *RWMutex2) Lock() {
+func (rw *RTWMutex2) Lock() {
 	rw.w.Lock()
 	rw.l.Lock()
 	if rw.readers == 0 {
@@ -125,8 +125,8 @@ func (rw *RWMutex2) Lock() {
 	rw.writerCond.Acquire(1)
 }
 
-func NewRWMutex2() *RWMutex2 {
-	return &RWMutex2{
+func NewRWMutex2() *RTWMutex2 {
+	return &RTWMutex2{
 		rtw:            sync.Mutex{},
 		w:              sync.Mutex{},
 		l:              sync.Mutex{},

@@ -1,6 +1,6 @@
 // GOMAXPROCS=10 go test
 
-package lala
+package rtwmutex
 
 import (
 	"fmt"
