@@ -31,7 +31,7 @@ func readtowriter(rwm IRTWMutex, num_iterations int, activity *int32, incr *int3
 		firstRead := *incr
 		n := atomic.AddInt32(activity, 1)
 		if n < 1 || n >= 10000 {
-			//rwm.RUnlock()
+			rwm.RUnlock()
 			panic(fmt.Sprintf("wlock(%d)\n", n))
 		}
 
