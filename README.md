@@ -28,7 +28,7 @@ type IRTWMutex interface{
 
 ### RTW Lock Priority
 * If an rtw lock is acquired and upgrade is called on it, it enters the lock when no pending readers is left even if a writer is pending since writer might change the state of the resource. 
-* When an upgraded rtw lock is released, pending writer acquires the lock if there is any. (Because reader locks are already shared giving writers some priority seems more reasonable option.)
+* When an upgraded rtw lock is released, pending writer acquires the lock if there is any. (Because reader locks are already shared giving writers some priority seems like a more reasonable option.)
 
 ## License
 
